@@ -22,7 +22,6 @@ def balance_info():
             balance_main = account["balance"] // 100
             decimals = account["balance"] % 100
             message = f"Текущий баланс: {balance_main}.{decimals} UAH"
-            print(f"{balance_main}.{decimals}")
     return message
 
 
