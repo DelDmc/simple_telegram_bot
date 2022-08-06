@@ -80,10 +80,8 @@ def request_for_authorization(message):
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     data = call.data.rsplit(" ")
-    try:
+    if data[1] != "None":
         user_identity = int(data[1])
-    except ValueError:
-        pass
 
     if call.data.startswith("rates"):
         text_message = actual_currency_rate()

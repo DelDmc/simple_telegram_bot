@@ -18,5 +18,5 @@ class User(Model):
 
 if __name__ == "__main__":
     db.create_tables([User, ])
-    migrate(migrator.add_column("User", "is_superuser", User.is_superuser))
+    # migrate(migrator.add_column("User", "is_superuser", User.is_superuser))
     # migrate(migrator.drop_not_null("User", User.username))
