@@ -1,9 +1,11 @@
 import telebot.types
+from telebot.types import MessageEntity
 from decouple import config
 from telebot import TeleBot, types
 
 from models import User, db
 from mono_api import actual_currency_rate, balance_info
+from utils import tables
 
 bot = TeleBot(config("TELEGRAM_TOKEN"))
 bot.set_my_commands(
@@ -49,8 +51,8 @@ def start_handler(message):
     bot.send_message(chat_id=message.chat.id, text=text_message)
     bot.send_message(chat_id=message.chat.id,
                      text="Доступны следующие опции",
-                     reply_markup=make_keyboard(options_list),
-                     parse_mode='HTML')
+                     reply_markup=make_keyboard(options_list)
+                     )
 
 
 @bot.message_handler(commands=["authorization"])
@@ -64,7 +66,6 @@ def request_for_authorization(message):
             text=f"{message.chat.id} Запрос авторизации от {message.chat.first_name} {message.chat.username}"
                  f"\nАвторизовать?",
             reply_markup=make_keyboard(authorization_list, message.chat.id),
-            parse_mode='HTML'
         )
         bot.send_message(
             chat_id=message.chat.id,
@@ -137,6 +138,13 @@ def show_currency_rates(message):
     else:
         text_message = "Вы не авторизованы.\nИспользуйте команду /authorization"
         bot.send_message(chat_id=message.chat.id, reply_markup=make_keyboard(options_list), text=text_message)
+
+
+@bot.message_handler(commands=["test"])
+def test_message(message):
+    text_message = "Here is the text to be edited by entities"
+    message_entity = [MessageEntity(length=6, offset=5, type="italic")]
+    bot.send_message(chat_id=message.chat.id, parse_mode="HTML", text=f'''<pre>{tables.create_table()}</pre>''')
 
 
 bot.infinity_polling()
