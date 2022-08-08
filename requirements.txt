@@ -2,7 +2,9 @@ certifi==2022.6.15
 charset-normalizer==2.1.0
 idna==3.3
 peewee==3.15.1
+prettytable==3.3.0
 pyTelegramBotAPI==4.6.1
 python-decouple==3.6
 requests==2.28.1
 urllib3==1.26.11
+wcwidth==0.2.5

@@ -1,5 +1,3 @@
-import time
-
 import requests
 from decouple import config
 
@@ -37,8 +35,6 @@ def balance_info():
     message = ""
     for account in info["accounts"]:
         if account["type"] == "black" and account["currencyCode"] == CODE["UAH"]:
-            # balance_main = account["balance"] // 100
-            # decimals = account["balance"] % 10
             balance = round(account["balance"] / 100, 2)
             message = f"Текущий баланс: {balance} UAH"
     return message

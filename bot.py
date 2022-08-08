@@ -1,5 +1,4 @@
 import telebot.types
-from telebot.types import MessageEntity
 from decouple import config
 from telebot import TeleBot, types
 
@@ -10,16 +9,17 @@ from utils import tables
 bot = TeleBot(config("TELEGRAM_TOKEN"))
 bot.set_my_commands(
     [
-        telebot.types.BotCommand("/start", "Main menu"),
-        telebot.types.BotCommand("/rates", "Rates"),
-        telebot.types.BotCommand("/authorization", "Authorization request"),
-        telebot.types.BotCommand("/balance", "Actual balance")
+        telebot.types.BotCommand("/start", "Главное меню"),
+        telebot.types.BotCommand("/rates", "Курс валют"),
+        telebot.types.BotCommand("/authorization", "Запрос авторизации"),
+        telebot.types.BotCommand("/balance", "Состояние счета"),
+        telebot.types.BotCommand("/statement", "Приход/Расход за текущий месяц")
     ]
 )
 
 deny_icon = u"\u274C"
 accept_icon = u"\u2705"
-options_list = {"rates": "Курс валют", "balance": "Остаток на счету"}
+options_list = {"rates": "Курс валют", "balance": "Остаток на счету", "statement": "Выписка за текущий месяц"}
 authorization_list = {"accept": accept_icon, "deny": deny_icon}
 
 
@@ -47,7 +47,8 @@ def start_handler(message):
                    f"На данный момент доступны следующие команды:\n" \
                    f"/rates - Актуальный курс валют Монобанка\n" \
                    f"/balance - Текущее состояния счета\n" \
-                   f"/authorization - Запрос авторизации\n"
+                   f"/authorization - Запрос авторизации\n" \
+                   f"/statement - Выписка за текущий месяц"
     bot.send_message(chat_id=message.chat.id, text=text_message)
     bot.send_message(chat_id=message.chat.id,
                      text="Доступны следующие опции",
@@ -120,6 +121,16 @@ def handle_query(call):
         bot.send_message(chat_id=call.message.chat.id, text="Пользователю отказано в авторизации")
         bot.send_message(chat_id=user_identity, text="Извините, Вам отказано в авторизации")
 
+    if call.data.startswith("statement"):
+        user = User.select().where(User.chat_id == call.message.chat.id).get(db)
+        if user.is_authorized == 1:
+            bot.send_message(chat_id=call.message.chat.id, text="Готовлю выписку за текущий месяц!")
+            bot.send_message(chat_id=call.message.chat.id, parse_mode="HTML",
+                             text=f'''<pre>{tables.create_table()}</pre>''')
+        else:
+            text_message = "Вы не авторизованы.\nИспользуйте команду /authorization"
+            bot.send_message(chat_id=call.message.chat.id, reply_markup=make_keyboard(options_list), text=text_message)
+
 
 @bot.message_handler(commands=["rates"])
 def show_currency_rates(message):
@@ -140,11 +151,21 @@ def show_currency_rates(message):
         bot.send_message(chat_id=message.chat.id, reply_markup=make_keyboard(options_list), text=text_message)
 
 
-@bot.message_handler(commands=["test"])
-def test_message(message):
-    text_message = "Here is the text to be edited by entities"
-    message_entity = [MessageEntity(length=6, offset=5, type="italic")]
-    bot.send_message(chat_id=message.chat.id, parse_mode="HTML", text=f'''<pre>{tables.create_table()}</pre>''')
+@bot.message_handler(commands=["statement"])
+def show_statement_for_current_month(message):
+    user = User.select().where(User.chat_id == message.chat.id).get(db)
+    if user.is_authorized == 1:
+        table = tables.create_table()
+        bot.send_message(chat_id=message.chat.id, text="Готовлю выписку за текущий месяц!")
+        bot.send_message(chat_id=message.chat.id, parse_mode="HTML", text=f'''<pre>{table}</pre>''')
+    else:
+        text_message = "Вы не авторизованы.\nИспользуйте команду /authorization"
+        bot.send_message(chat_id=message.chat.id, reply_markup=make_keyboard(options_list), text=text_message)
+
+
+# @bot.message_handler(commands=["test"])
+# def test_message(message):
+#     bot.send_message(chat_id=message.chat.id, parse_mode="HTML", text=f'''<pre>{tables.create_table()}</pre>''')
 
 
 bot.infinity_polling()

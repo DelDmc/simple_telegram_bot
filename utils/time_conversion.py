@@ -16,7 +16,7 @@ def times_from_to() -> dict:
 
 
 def time_from_sec_to_date(seconds: int) -> str:
-    return datetime.fromtimestamp(seconds).strftime("%d-%m-%Y")
+    return datetime.fromtimestamp(seconds).strftime("%d-%m")
 
 
 if __name__ == "__main__":

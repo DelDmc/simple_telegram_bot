@@ -1,4 +1,3 @@
-from peewee import SqliteDatabase, Model, CharField, DateField, ForeignKeyField, BooleanField
 from playhouse.migrate import *
 
 db = SqliteDatabase("bot.sqlite3")
