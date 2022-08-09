@@ -181,10 +181,12 @@ def show_statement_for_current_month(message):
 
 # if __name__ == "__main__":
 
+if "HEROKU" in list(os.environ.keys()):
     @app.route(f'/{config("TELEGRAM_TOKEN")}', methods=['POST'])
     def respond():
         bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
         return "!", 200
+
 
     @app.route('/setwebhook', methods=['GET', 'POST'])
     def set_webhook():
@@ -202,8 +204,6 @@ def show_statement_for_current_month(message):
     def index():
         return 'index'
 
-
-if "HEROKU" in list(os.environ.keys()):
     app = Flask(__name__)
     bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
     app.run(threaded=True)
