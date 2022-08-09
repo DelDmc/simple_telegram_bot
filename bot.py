@@ -10,7 +10,7 @@ from mono_api import actual_currency_rate, balance_info
 from utils import tables
 
 bot = TeleBot(config("TELEGRAM_TOKEN"))
-
+app = Flask(__name__)
 
 URL = "https://simple-fin-telegram-bot.herokuapp.com/"
 bot.set_my_commands(
@@ -181,7 +181,6 @@ def show_statement_for_current_month(message):
 
 if __name__ == "__main__":
     if "HEROKU" in list(os.environ.keys()):
-        app = Flask(__name__)
 
         @app.route(f'/{config("TELEGRAM_TOKEN")}', methods=['POST'])
         def respond():
