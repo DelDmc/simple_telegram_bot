@@ -1,5 +1,6 @@
 import telebot.types
 from decouple import config
+from flask import Flask, request
 from telebot import TeleBot, types
 
 from models import User, db
@@ -7,6 +8,9 @@ from mono_api import actual_currency_rate, balance_info
 from utils import tables
 
 bot = TeleBot(config("TELEGRAM_TOKEN"))
+
+app = Flask(__name__)
+URL = "https://simple-fin-telegram-bot.herokuapp.com/"
 bot.set_my_commands(
     [
         telebot.types.BotCommand("/start", "Главное меню"),
@@ -16,6 +20,7 @@ bot.set_my_commands(
         telebot.types.BotCommand("/statement", "Приход/Расход за текущий месяц")
     ]
 )
+
 
 deny_icon = u"\u274C"
 accept_icon = u"\u2705"
@@ -166,6 +171,33 @@ def show_statement_for_current_month(message):
 # @bot.message_handler(commands=["test"])
 # def test_message(message):
 #     bot.send_message(chat_id=message.chat.id, parse_mode="HTML", text=f'''<pre>{tables.create_table()}</pre>''')
+
+
+@app.route(f'/{config("TELEGRAM_TOKEN")}', methods=['POST'])
+def respond():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
+
+
+@app.route('/setwebhook', methods=['GET', 'POST'])
+def set_webhook():
+    # we use the bot object to link the bot to our app which live
+    # in the link provided by URL
+    s = bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
+    # something to let us know things work
+    if s:
+        return "webhook setup ok"
+    else:
+        return "webhook setup failed"
+
+
+@app.route('/')
+def index():
+    return '.'
+
+
+if __name__ == '__main__':
+    app.run(threaded=True)
 
 
 bot.infinity_polling()
