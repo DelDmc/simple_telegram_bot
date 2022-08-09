@@ -183,6 +183,7 @@ def respond():
 def set_webhook():
     # we use the bot object to link the bot to our app which live
     # in the link provided by URL
+    bot.remove_webhook()
     s = bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
     # something to let us know things work
     if s:
@@ -193,9 +194,9 @@ def set_webhook():
 
 @app.route('/')
 def index():
-    return '.'
+    return 'index'
 
 
 if __name__ == '__main__':
+    bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
     app.run(threaded=True)
-
