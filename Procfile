@@ -1,1 +1,1 @@
-web: python3 models.py
+web: sh -c 'python3 models.py && gunicorn bot:app'
