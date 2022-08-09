@@ -1,3 +1,5 @@
+import os
+
 import telebot.types
 from decouple import config
 from flask import Flask, request
@@ -9,7 +11,7 @@ from utils import tables
 
 bot = TeleBot(config("TELEGRAM_TOKEN"))
 
-app = Flask(__name__)
+
 URL = "https://simple-fin-telegram-bot.herokuapp.com/"
 bot.set_my_commands(
     [
@@ -36,9 +38,9 @@ def make_keyboard(options, args=None):
 
 
 def make_first_user_superuser():
-    user = superuser = User.select().where(User.id == 1).get(db)
-    user.is_authorized = 1
-    user.is_superuser = 1
+    user = User.select().where(User.id == 1).get(db)
+    user.is_authorized, user.is_superuser = 1, 1
+    user.save()
 
 
 @bot.message_handler(commands=["start"])
@@ -50,8 +52,6 @@ def start_handler(message):
             username=message.chat.username
         )
     make_first_user_superuser()
-    # superuser = User.select().where(User.id == 1).get(db)
-    # superuser.is_authorized, superuser.is_superuser = 1, 1
 
     if message.chat.last_name:
         credentials = f"{message.chat.first_name} {message.chat.last_name}"
@@ -73,6 +73,7 @@ def start_handler(message):
 
 @bot.message_handler(commands=["authorization"])
 def request_for_authorization(message):
+    make_first_user_superuser()
     superuser = User.select().where(User.is_superuser == 1).get(db)
     user = User.select().where(User.chat_id == message.chat.id).get(db)
 
@@ -178,35 +179,32 @@ def show_statement_for_current_month(message):
         bot.send_message(chat_id=message.chat.id, reply_markup=make_keyboard(options_list), text=text_message)
 
 
-# @bot.message_handler(commands=["test"])
-# def test_message(message):
-#     bot.send_message(chat_id=message.chat.id, parse_mode="HTML", text=f'''<pre>{tables.create_table()}</pre>''')
+if "HEROKU" in list(os.environ.keys()):
+    app = Flask(__name__)
 
+    @app.route(f'/{config("TELEGRAM_TOKEN")}', methods=['POST'])
+    def respond():
+        bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+        return "!", 200
 
-@app.route(f'/{config("TELEGRAM_TOKEN")}', methods=['POST'])
-def respond():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "!", 200
+    @app.route('/setwebhook', methods=['GET', 'POST'])
+    def set_webhook():
+        # we use the bot object to link the bot to our app which live
+        # in the link provided by URL
+        bot.remove_webhook()
+        s = bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
+        # something to let us know things work
+        if s:
+            return "webhook setup ok"
+        else:
+            return "webhook setup failed"
 
+    @app.route('/')
+    def index():
+        return 'index'
 
-@app.route('/setwebhook', methods=['GET', 'POST'])
-def set_webhook():
-    # we use the bot object to link the bot to our app which live
-    # in the link provided by URL
-    bot.remove_webhook()
-    s = bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
-    # something to let us know things work
-    if s:
-        return "webhook setup ok"
-    else:
-        return "webhook setup failed"
-
-
-@app.route('/')
-def index():
-    return 'index'
-
-
-if __name__ == '__main__':
     bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
     app.run(threaded=True)
+else:
+    bot.remove_webhook()
+    bot.infinity_polling()
