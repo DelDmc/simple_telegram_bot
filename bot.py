@@ -10,9 +10,8 @@ from mono_api import actual_currency_rate, balance_info
 from utils import tables
 
 bot = TeleBot(config("TELEGRAM_TOKEN"))
-
-
 URL = "https://simple-fin-telegram-bot.herokuapp.com/"
+
 bot.set_my_commands(
     [
         telebot.types.BotCommand("/start", "Главное меню"),
@@ -179,9 +178,9 @@ def show_statement_for_current_month(message):
         bot.send_message(chat_id=message.chat.id, reply_markup=make_keyboard(options_list), text=text_message)
 
 
-# if __name__ == "__main__":
-
 if "HEROKU" in list(os.environ.keys()):
+    app = Flask(__name__)
+
     @app.route(f'/{config("TELEGRAM_TOKEN")}', methods=['POST'])
     def respond():
         bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
@@ -204,7 +203,7 @@ if "HEROKU" in list(os.environ.keys()):
     def index():
         return 'index'
 
-    app = Flask(__name__)
+
     bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
     app.run(threaded=True)
 else:
