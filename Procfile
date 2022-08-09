@@ -1,0 +1,1 @@
+web: sh -c "python3 models.py && python3 bot.py"
