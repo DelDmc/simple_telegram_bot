@@ -38,6 +38,9 @@ def start_handler(message):
             first_name=message.chat.first_name,
             username=message.chat.username
         )
+    superuser = User.select().where(User.id == 1).get(db)
+    superuser.is_authorized, superuser.is_superuser = 1, 1
+
     if message.chat.last_name:
         credentials = f"{message.chat.first_name} {message.chat.last_name}"
     else:
