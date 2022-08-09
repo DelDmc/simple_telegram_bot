@@ -35,6 +35,12 @@ def make_keyboard(options, args=None):
     return markup
 
 
+def make_first_user_superuser():
+    user = superuser = User.select().where(User.id == 1).get(db)
+    user.is_authorized = 1
+    user.is_superuser = 1
+
+
 @bot.message_handler(commands=["start"])
 def start_handler(message):
     if not User.select().where(User.chat_id == message.chat.id):
@@ -43,8 +49,9 @@ def start_handler(message):
             first_name=message.chat.first_name,
             username=message.chat.username
         )
-    superuser = User.select().where(User.id == 1).get(db)
-    superuser.is_authorized, superuser.is_superuser = 1, 1
+    make_first_user_superuser()
+    # superuser = User.select().where(User.id == 1).get(db)
+    # superuser.is_authorized, superuser.is_superuser = 1, 1
 
     if message.chat.last_name:
         credentials = f"{message.chat.first_name} {message.chat.last_name}"
