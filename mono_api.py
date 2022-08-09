@@ -15,7 +15,6 @@ url_info = "https://api.monobank.ua/personal/client-info"
 url_statement = "https://api.monobank.ua/personal/statement/{}/{}/{}"
 headers = {"X-Token": config("MONOBANK_TOKEN")}
 rates = requests.get(url_rates).json()
-info = requests.get(url_info, headers=headers).json()
 
 
 def statement_info():
@@ -33,6 +32,7 @@ def statement_info():
 
 def balance_info():
     message = ""
+    info = requests.get(url_info, headers=headers).json()
     for account in info["accounts"]:
         if account["type"] == "black" and account["currencyCode"] == CODE["UAH"]:
             balance = round(account["balance"] / 100, 2)
