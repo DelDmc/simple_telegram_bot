@@ -5,7 +5,7 @@ from utils.time_conversion import time_from_sec_to_date
 
 def create_table():
     statement_json = statement_info()
-    table = pt.PrettyTable(["Date", "Sum", "Description"])
+    table = pt.PrettyTable(["Дата", "Сумма", "Описание"])
     table.align["Date"] = "c"
     table.align["Sum"] = "r"
     table.align["Description"] = "r"
