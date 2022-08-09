@@ -179,32 +179,33 @@ def show_statement_for_current_month(message):
         bot.send_message(chat_id=message.chat.id, reply_markup=make_keyboard(options_list), text=text_message)
 
 
-if "HEROKU" in list(os.environ.keys()):
-    app = Flask(__name__)
+if __name__ == "__main__":
+    if "HEROKU" in list(os.environ.keys()):
+        app = Flask(__name__)
 
-    @app.route(f'/{config("TELEGRAM_TOKEN")}', methods=['POST'])
-    def respond():
-        bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-        return "!", 200
+        @app.route(f'/{config("TELEGRAM_TOKEN")}', methods=['POST'])
+        def respond():
+            bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+            return "!", 200
 
-    @app.route('/setwebhook', methods=['GET', 'POST'])
-    def set_webhook():
-        # we use the bot object to link the bot to our app which live
-        # in the link provided by URL
+        @app.route('/setwebhook', methods=['GET', 'POST'])
+        def set_webhook():
+            # we use the bot object to link the bot to our app which live
+            # in the link provided by URL
+            bot.remove_webhook()
+            s = bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
+            # something to let us know things work
+            if s:
+                return "webhook setup ok"
+            else:
+                return "webhook setup failed"
+
+        @app.route('/')
+        def index():
+            return 'index'
+
+        bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
+        app.run(threaded=True)
+    else:
         bot.remove_webhook()
-        s = bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
-        # something to let us know things work
-        if s:
-            return "webhook setup ok"
-        else:
-            return "webhook setup failed"
-
-    @app.route('/')
-    def index():
-        return 'index'
-
-    bot.set_webhook(url=f'{URL}{config("TELEGRAM_TOKEN")}')
-    app.run(threaded=True)
-else:
-    bot.remove_webhook()
-    bot.infinity_polling()
+        bot.infinity_polling()
