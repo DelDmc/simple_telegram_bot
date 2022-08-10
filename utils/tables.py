@@ -13,7 +13,7 @@ def create_table(times_func):
     for statement in statement_json:
         data.append(
             (
-                time_from_sec_to_date(statement["time"]),
+                time_from_sec_to_date(int(statement["time"])),
                 f"{round(statement['amount']/100, 2)}",
                 statement['description'][:15]
             )

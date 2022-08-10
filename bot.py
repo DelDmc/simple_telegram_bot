@@ -8,7 +8,7 @@ from telebot import TeleBot, types
 from models import User, db
 from mono_api import actual_currency_rate, balance_info
 from utils import tables
-from utils.time_conversion import times_from_to_current_month, times_from_to_by_days
+from utils.time_conversion import times_from_to_current_month, times_from_to_by_days, time_one_day_from_to
 
 bot = TeleBot(config("TELEGRAM_TOKEN"))
 URL = "https://simple-fin-telegram-bot.herokuapp.com/"
@@ -29,13 +29,12 @@ authorization_list = {"accept": accept_icon, "deny": deny_icon}
 def make_keyboard(options, args=None):
     markup = types.InlineKeyboardMarkup()
     for key, value in options.items():
-
         markup.add(types.InlineKeyboardButton(text=value, callback_data=f"{key} {args}"))
     return markup
 
 
 def make_keyboard_for_unauthorized():
-    markup = types.ReplyKeyboardMarkup()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     rate_btn = types.KeyboardButton("Курс валюты")
     authorization_btn = types.KeyboardButton("Авторизация")
     markup.row(rate_btn, authorization_btn)
@@ -131,7 +130,7 @@ def current_month_statement_handler(message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Выписка за неделю' or message.text == 'Выписка за 30 дней')
-def current_month_statement_handler(message):
+def week_one_month_statement_handler(message):
     user = User.select().where(User.chat_id == message.chat.id).get(db)
     time_from_time_to_week = {}
     if user.is_authorized == 1:
@@ -144,6 +143,47 @@ def current_month_statement_handler(message):
 
         table = tables.create_table(time_from_time_to_week)
         bot.send_message(chat_id=message.chat.id, parse_mode="HTML", text=f'''<pre>{table}</pre>''')
+    else:
+        text_message = "Вы не авторизованы.\nПройдите авторизацию"
+        bot.send_message(chat_id=message.chat.id, reply_markup=make_keyboard_for_unauthorized(), text=text_message)
+
+
+@bot.message_handler(func=lambda message: message.text == "Выписка\nВыбрать день")
+def current_month_statement_handler(message):
+    msg = bot.send_message(chat_id=message.chat.id, text="Введите дату в формате 'дд-мм' ")
+    bot.register_next_step_handler(msg, day_statement)
+
+
+def day_statement(message):
+    user = User.select().where(User.chat_id == message.chat.id).get(db)
+    if user.is_authorized == 1:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        statement_btn = types.KeyboardButton("Выписка")
+        start_btn = types.KeyboardButton("Меню Старт")
+        markup.row(start_btn, statement_btn)
+
+        date = message.text.split("-")
+        try:
+            day = int(date[0])
+            month = int(date[1])
+            if month < 5:
+                bot.send_message(chat_id=message.chat.id, text="Нет данных за этот период")
+                msg = bot.send_message(chat_id=message.chat.id, text="Введите дату в формате 'дд-мм' ")
+                bot.register_next_step_handler(msg, day_statement)
+            else:
+                bot.send_message(chat_id=message.chat.id, text="Готовлю выписку за указанный день!")
+                time_one_day = time_one_day_from_to(day, month)
+                table = tables.create_table(time_one_day)
+                bot.send_message(
+                    chat_id=message.chat.id,
+                    parse_mode="HTML",
+                    text=f'''<pre>{table}</pre>''',
+                    reply_markup=markup
+                )
+
+        except (IndexError, ValueError):
+            msg = bot.send_message(chat_id=message.chat.id, text="Ошибка ввода. Введите Введите дату в формате 'дд-мм'")
+            bot.register_next_step_handler(msg, day_statement)
     else:
         text_message = "Вы не авторизованы.\nПройдите авторизацию"
         bot.send_message(chat_id=message.chat.id, reply_markup=make_keyboard_for_unauthorized(), text=text_message)

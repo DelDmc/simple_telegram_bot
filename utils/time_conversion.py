@@ -30,6 +30,16 @@ def time_from_sec_to_date(seconds: int) -> str:
     return datetime.fromtimestamp(seconds).strftime("%d-%m")
 
 
+def time_one_day_from_to(day: int, month: int) -> dict:
+    times_dict = {}
+    seconds_in_day = 86400
+    time_struct_from = time.strptime(f"{day}-{month}-22", "%d-%m-%y")
+    time_from = int(time.mktime(time_struct_from))
+    times_dict['time_from'] = int(time_from)
+    times_dict['time_to'] = int(time_from + seconds_in_day)
+    return times_dict
+
+
 if __name__ == "__main__":
     print(times_from_to_by_days(7))
     print("from", time_from_sec_to_date(1659559688))
@@ -38,3 +48,7 @@ if __name__ == "__main__":
     print(times_from_to_by_days(30))
     print("from", time_from_sec_to_date(1657572488))
     print("to", time_from_sec_to_date(1660164511))
+
+    print(time_one_day_from_to(7, 8))
+    print("from", time_from_sec_to_date(1659819600))
+    print("to", time_from_sec_to_date(1659906000))
