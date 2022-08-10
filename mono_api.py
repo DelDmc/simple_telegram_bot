@@ -1,7 +1,7 @@
 import requests
 from decouple import config
 
-from utils.time_conversion import times_from_to
+from utils.time_conversion import times_from_to_current_month
 
 CODE = {
     "UAH": 980,
@@ -17,14 +17,14 @@ headers = {"X-Token": config("MONOBANK_TOKEN")}
 rates = requests.get(url_rates).json()
 
 
-def statement_info():
+def statement_info(times_func):
     r = requests.get(
         url_statement.format(
             config(
                 "MONOBANK_BLACK_ACCOUNT"
             ),
-            times_from_to()["time_from"],
-            times_from_to()["time_to"]),
+            times_func["time_from"],
+            times_func["time_to"]),
         headers=headers
     )
     return r.json()
