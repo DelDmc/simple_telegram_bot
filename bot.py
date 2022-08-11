@@ -121,7 +121,7 @@ def current_month_statement_handler(message):
     user = User.select().where(User.chat_id == message.chat.id).get(db)
     if user.is_authorized == 1:
         time_from_time_to_current_month = times_from_to_current_month()
-        table = tables.create_table(time_from_time_to_current_month)
+        table = tables.create_statement_table(time_from_time_to_current_month)
         bot.send_message(chat_id=message.chat.id, text="Готовлю выписку за текущий месяц!")
         bot.send_message(chat_id=message.chat.id, parse_mode="HTML", text=f'''<pre>{table}</pre>''')
     else:
@@ -141,7 +141,7 @@ def week_one_month_statement_handler(message):
             time_from_time_to_week = times_from_to_by_days(30)
             bot.send_message(chat_id=message.chat.id, text="Готовлю выписку за 30 дней!")
 
-        table = tables.create_table(time_from_time_to_week)
+        table = tables.create_statement_table(time_from_time_to_week)
         bot.send_message(chat_id=message.chat.id, parse_mode="HTML", text=f'''<pre>{table}</pre>''')
     else:
         text_message = "Вы не авторизованы.\nПройдите авторизацию"
@@ -173,7 +173,7 @@ def day_statement(message):
             else:
                 bot.send_message(chat_id=message.chat.id, text="Готовлю выписку за указанный день!")
                 time_one_day = time_one_day_from_to(day, month)
-                table = tables.create_table(time_one_day)
+                table = tables.create_statement_table(time_one_day)
                 bot.send_message(
                     chat_id=message.chat.id,
                     parse_mode="HTML",
@@ -191,8 +191,12 @@ def day_statement(message):
 
 @bot.message_handler(func=lambda message: message.text == 'Курс валюты')
 def currency_rates_handler(message):
-    text_message = actual_currency_rate()
-    bot.send_message(chat_id=message.chat.id, text=text_message)
+    table = tables.create_rates_table()
+    bot.send_message(
+        chat_id=message.chat.id,
+        parse_mode="HTML",
+        text=f'''<pre>{table}</pre>'''
+    )
 
 
 @bot.message_handler(func=lambda message: message.text == 'Остаток на счету')
@@ -227,4 +231,3 @@ def handle_query(call):
 if __name__ == '__main__':
     bot.remove_webhook()
     bot.infinity_polling()
-
